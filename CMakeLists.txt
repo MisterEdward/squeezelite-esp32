@@ -106,7 +106,7 @@ add_custom_target(_jtag_scripts  ALL
 					COMMAND ${CMAKE_COMMAND} -P "${CMAKE_CURRENT_SOURCE_DIR}/generate_debug_scripts.cmake"
 )
 
-if(CMAKE_HOST_UNIX)
+if(CMAKE_HOST_UNIX AND CONFIG_CSPOT_SINK)
   # Add custom target to set executable permissions before build for cspot component
     add_custom_target(set_cspot_permissions
         COMMAND ${CMAKE_COMMAND} -E echo "************************************************************************************************"

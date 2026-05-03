@@ -287,7 +287,7 @@ menu "Squeezelite-ESP32"
 	menu "Audio Input"
 		config BT_SINK
 			bool "Bluetooth receiver"
-			default y
+			default n
 			help
 				Enable bluetooth sink (Note that you obviously can't at the same time be a Bluetooth receiver and transmitter)
 		config BT_NAME
@@ -317,7 +317,7 @@ menu "Squeezelite-ESP32"
 				AirPlay service listening port
 		config CSPOT_SINK
 			bool "Spotify (cspot) receiver"
-			default y
+			default n
 			help
 				Enable Spotify connect using CSpot		
 	endmenu
@@ -460,8 +460,8 @@ menu "Squeezelite-ESP32"
 	endmenu	
 	
 	config DEFAULT_COMMAND_LINE
-        string "Default command line to execute"
-        default "squeezelite -o I2S -b 500:2000 -d all=info -C 30"
-        help
-            This is the command to run when starting the device
+		string "Default command line to execute"
+		default "squeezelite -o I2S -b 500:2000 -d all=info -C 30 -W -s -disable"
+		help
+			This is the command to run when starting the device
 endmenu
