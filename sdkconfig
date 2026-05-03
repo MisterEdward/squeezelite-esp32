@@ -194,7 +194,7 @@ CONFIG_RELEASE_API="https://api.github.com/repos/sle118/squeezelite-esp32/releas
 CONFIG_SQUEEZELITE_ESP32_RELEASE_URL="https://github.com/sle118/squeezelite-esp32/releases"
 CONFIG_PROJECT_NAME="Squeezelite-ESP32"
 CONFIG_FW_PLATFORM_NAME="ESP32"
-CONFIG_DAC_CONFIG=""
+CONFIG_DAC_CONFIG="model=ES8388,bck=5,ws=25,do=26,sda=18,scl=23,i2c=16"
 CONFIG_SPDIF_CONFIG=""
 CONFIG_GPIO_EXP_CONFIG=""
 CONFIG_SPI_CONFIG=""
