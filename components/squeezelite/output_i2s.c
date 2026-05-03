@@ -46,6 +46,7 @@ sure that using rate_delay would fix that
 #include "platform_config.h"
 #include "gpio_exp.h"
 #include "accessors.h"
+#include "alert_service.h"
 #include "equalizer.h"
 #include "globdefs.h"
 
@@ -525,25 +526,27 @@ static void output_thread_i2s(void *arg) {
 	uint32_t fullness = gettime_ms();
 	bool synced;
 	output_state state = OUTPUT_OFF - 1;
+	bool alert_only = false, prev_alert_only = false;
         
 	while (running) {
 			
 		TIME_MEASUREMENT_START(timer_start);
 
 		LOCK;
+		alert_only = output.state <= OUTPUT_STOPPED && alert_service_is_active();
 		
 		// manage led display & analogue
-		if (state != output.state) {
-			LOG_INFO("Output state is %d", output.state);
-			if (output.state == OUTPUT_OFF) {
+		if (state != output.state || prev_alert_only != alert_only) {
+			LOG_INFO("Output state is %d%s", output.state, alert_only ? " (alert active)" : "");
+			if (output.state == OUTPUT_OFF && !alert_only) {
 				led_blink(LED_GREEN, 100, 2500);
 				if (amp_control.gpio != -1) gpio_set_level_x(amp_control.gpio, !amp_control.active);
 				LOG_INFO("switching off amp GPIO %d", amp_control.gpio);
-			} else if (output.state == OUTPUT_STOPPED) {
+			} else if (output.state == OUTPUT_STOPPED && !alert_only) {
                 i2s_idle_since = pdTICKS_TO_MS(xTaskGetTickCount());
 				adac->speaker(false);
 				led_blink(LED_GREEN, 200, 1000);
-			} else if (output.state == OUTPUT_RUNNING) {
+			} else if (output.state == OUTPUT_RUNNING || alert_only) {
 				if (!jack_mutes_amp || !jack_inserted_svc()) {
 					if (amp_control.gpio != -1) gpio_set_level_x(amp_control.gpio, amp_control.active);
 					adac->speaker(true);
@@ -552,8 +555,9 @@ static void output_thread_i2s(void *arg) {
 			}	
 		}
 		state = output.state;
+		prev_alert_only = alert_only;
 		
-		if (output.state == OUTPUT_OFF) {
+		if (output.state == OUTPUT_OFF && !alert_only) {
 			UNLOCK;
 			if (isI2SStarted) {
 				isI2SStarted = false;
@@ -562,7 +566,12 @@ static void output_thread_i2s(void *arg) {
 			}
 			usleep(100000);
 			continue;
-		} else if (output.state == OUTPUT_STOPPED) {
+		} else if (output.state == OUTPUT_STOPPED && !alert_only) {
+			synced = false;
+		}
+
+		if (alert_only) {
+			output.next_sample_rate = output.current_sample_rate = 44100;
 			synced = false;
 		}
 					
@@ -627,6 +636,7 @@ static void output_thread_i2s(void *arg) {
 		
 		// run equalizer
 		equalizer_process(obuf, oframes * BYTES_PER_FRAME);
+		alert_service_mix_pcm_frames(obuf, oframes, 2, BYTES_PER_FRAME == 8 ? 32 : 16);
 
 		// we assume that here we have been able to entirely fill the DMA buffers
 		if (spdif.enabled) {

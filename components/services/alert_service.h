@@ -23,3 +23,5 @@ typedef struct {
 esp_err_t alert_service_init(void);
 esp_err_t alert_service_request_play(const char *filename);
 const alert_state_t *alert_service_state(void);
+bool alert_service_is_active(void);
+bool alert_service_mix_pcm_frames(void *samples, size_t frames, size_t channels, int bits_per_sample);

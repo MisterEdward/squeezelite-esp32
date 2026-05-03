@@ -57,6 +57,18 @@ static EXT_RAM_ATTR SemaphoreHandle_t alert_state_mutex;
 static EXT_RAM_ATTR alert_state_t alert_state;
 static bool spiffs_mounted;
 
+static inline int16_t clip_s16(int32_t sample) {
+	if (sample > INT16_MAX) return INT16_MAX;
+	if (sample < INT16_MIN) return INT16_MIN;
+	return (int16_t) sample;
+}
+
+static inline int32_t clip_s32(int64_t sample) {
+	if (sample > INT32_MAX) return INT32_MAX;
+	if (sample < INT32_MIN) return INT32_MIN;
+	return (int32_t) sample;
+}
+
 static bool alert_filename_is_valid(const char *filename) {
 	if (filename == NULL || *filename == '\0') return false;
 	if (strlen(filename) >= ALERT_FILE_NAME_MAX) return false;
@@ -290,4 +302,69 @@ esp_err_t alert_service_request_play(const char *filename) {
 
 const alert_state_t *alert_service_state(void) {
 	return &alert_state;
+}
+
+bool alert_service_is_active(void) {
+	bool active = false;
+
+	if (alert_state_mutex == NULL) return false;
+	if (xSemaphoreTake(alert_state_mutex, 0) != pdTRUE) return false;
+
+	active = alert_state.active && alert_state.buffer && alert_state.pos < alert_state.len;
+	xSemaphoreGive(alert_state_mutex);
+
+	return active;
+}
+
+bool alert_service_mix_pcm_frames(void *samples, size_t frames, size_t channels, int bits_per_sample) {
+	bool mixed = false;
+	size_t frame;
+
+	if (samples == NULL || frames == 0 || channels == 0) return false;
+	if (alert_state_mutex == NULL) return false;
+	if (xSemaphoreTake(alert_state_mutex, 0) != pdTRUE) return false;
+
+	if (!(alert_state.active && alert_state.buffer && alert_state.pos < alert_state.len)) {
+		xSemaphoreGive(alert_state_mutex);
+		return false;
+	}
+
+	if (bits_per_sample == 16) {
+		int16_t *pcm = (int16_t *) samples;
+
+		for (frame = 0; frame < frames && alert_state.pos < alert_state.len; frame++) {
+			int32_t alert = ((int32_t) alert_state.buffer[alert_state.pos++]) >> 1;
+			size_t channel;
+
+			for (channel = 0; channel < channels; channel++) {
+				size_t index = frame * channels + channel;
+				pcm[index] = clip_s16((int32_t) pcm[index] + alert);
+			}
+			mixed = true;
+		}
+	} else if (bits_per_sample == 32) {
+		int32_t *pcm = (int32_t *) samples;
+
+		for (frame = 0; frame < frames && alert_state.pos < alert_state.len; frame++) {
+			int64_t alert = ((int32_t) alert_state.buffer[alert_state.pos++]) << 15;
+			size_t channel;
+
+			for (channel = 0; channel < channels; channel++) {
+				size_t index = frame * channels + channel;
+				pcm[index] = clip_s32((int64_t) pcm[index] + alert);
+			}
+			mixed = true;
+		}
+	} else {
+		ESP_LOGW(TAG, "Unsupported PCM depth %d for alert mixing", bits_per_sample);
+	}
+
+	if (alert_state.pos >= alert_state.len) {
+		alert_state.active = false;
+		alert_state.pos = alert_state.len;
+		ESP_LOGI(TAG, "Alert playback completed for %s", alert_state.file);
+	}
+
+	xSemaphoreGive(alert_state_mutex);
+	return mixed;
 }
