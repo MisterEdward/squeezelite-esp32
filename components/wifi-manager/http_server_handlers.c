@@ -27,6 +27,7 @@ Copyright (c) 2017-2021 Sebastien L
 #include "network_wifi.h"
 #include "network_status.h"
 #include "tools.h"
+#include "alert_service.h"
 
 #define HTTP_STACK_SIZE	(5*1024)
 const char str_na[]="N/A";
@@ -418,6 +419,49 @@ esp_err_t ap_scan_handler(httpd_req_t *req){
 		httpd_resp_send(req, (const char *)empty, HTTPD_RESP_USE_STRLEN);
 	}
 	return err;
+}
+
+esp_err_t alert_play_post_handler(httpd_req_t *req) {
+	ESP_LOGD_LOC(TAG, "serving [%s]", req->uri);
+
+	esp_err_t err = post_handler_buff_receive(req);
+	if (err != ESP_OK) {
+		return err;
+	}
+
+	httpd_resp_set_type(req, HTTPD_TYPE_JSON);
+
+	char *buf = ((rest_server_context_t *)(req->user_ctx))->scratch;
+	cJSON *root = cJSON_Parse(buf);
+	if (root == NULL) {
+		ESP_LOGE_LOC(TAG, "Malformed alert request body: %s", buf);
+		httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Malformed alert json");
+		return ESP_FAIL;
+	}
+
+	cJSON *file = cJSON_GetObjectItemCaseSensitive(root, "file");
+	if (!cJSON_IsString(file) || file->valuestring == NULL || file->valuestring[0] == '\0') {
+		cJSON_Delete(root);
+		httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing file");
+		return ESP_FAIL;
+	}
+
+	err = alert_service_request_play(file->valuestring);
+	if (err != ESP_OK) {
+		ESP_LOGE_LOC(TAG, "Unable to queue alert %s: %s", file->valuestring, esp_err_to_name(err));
+		cJSON_Delete(root);
+		if (err == ESP_ERR_INVALID_ARG) {
+			httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid file");
+		} else {
+			httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Alert service unavailable");
+		}
+		return err;
+	}
+
+	char response[128];
+	snprintf(response, sizeof(response), "{ \"result\": \"queued\", \"file\": \"%s\" }", file->valuestring);
+	cJSON_Delete(root);
+	return httpd_resp_sendstr(req, response);
 }
 
 esp_err_t console_cmd_get_handler(httpd_req_t *req){

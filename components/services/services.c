@@ -25,6 +25,7 @@
 #include "accessors.h"
 #include "messaging.h"
 #include "buttons.h"
+#include "alert_service.h"
 #include "services.h"
 
 extern void battery_svc_init(void);
@@ -417,4 +418,5 @@ void services_init(void) {
 	led_svc_init();
 	battery_svc_init();
 	monitor_svc_init();
+	alert_service_init();
 }

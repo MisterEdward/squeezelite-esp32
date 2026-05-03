@@ -54,6 +54,8 @@ set(EXTRA_COMPONENT_DIRS components/platform_console/app_recovery components/pla
 
 project(recovery)
 
+spiffs_create_partition_image(alerts spiffs FLASH_IN_PROJECT)
+
 # we need own "esp_app_desc" to take precedence
 add_custom_command(
 			TARGET recovery.elf

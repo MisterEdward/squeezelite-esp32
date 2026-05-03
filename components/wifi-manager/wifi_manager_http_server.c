@@ -81,6 +81,8 @@ void register_regular_handlers(httpd_handle_t server){
 	httpd_register_uri_handler(server, &config_post);
 	httpd_uri_t connect_post = { .uri = "/connect.json", .method = HTTP_POST, .handler = connect_post_handler, .user_ctx = rest_context };
 	httpd_register_uri_handler(server, &connect_post);
+	httpd_uri_t alert_play_post = { .uri = "/alert/play", .method = HTTP_POST, .handler = alert_play_post_handler, .user_ctx = rest_context };
+	httpd_register_uri_handler(server, &alert_play_post);
 
 	httpd_uri_t reboot_ota_post = { .uri = "/reboot_ota.json", .method = HTTP_POST, .handler = reboot_ota_post_handler, .user_ctx = rest_context };
 	httpd_register_uri_handler(server, &reboot_ota_post);
@@ -187,6 +189,5 @@ void stop_webserver(httpd_handle_t server)
     // Stop the httpd server
     httpd_stop(server);
 }
-
 
 
