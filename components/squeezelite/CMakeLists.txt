@@ -1,14 +1,5 @@
 # for the forgetful, REQUIRES cannot use CONFIG_XXX due to parsing order
-set(target_requires "")
 set(optional_requires "tools" "display" "audio" "led_strip" "_override")
-
-if(IDF_TARGET STREQUAL "esp32" AND CONFIG_BT_SINK)
-    set(target_requires "driver_bt")
-endif()
-
-if(CONFIG_CSPOT_SINK)
-    list(APPEND optional_requires "spotify")
-endif()
 
 idf_component_register( SRC_DIRS . external ac101 tas57xx wm8978
 							INCLUDE_DIRS .  ac101 
@@ -21,7 +12,6 @@ idf_component_register( SRC_DIRS . external ac101 tas57xx wm8978
 							 			services 
 							 			raop   
 										${optional_requires}
-							 			${target_requires}                                    
 							EMBED_FILES vu_s.data arrow.data
 	)
 

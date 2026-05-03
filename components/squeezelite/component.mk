@@ -13,7 +13,6 @@ CFLAGS += -O3 -DLINKALL -DLOOPBACK -DNO_FAAD -DRESAMPLE16 -DEMBEDDED -DTREMOR_ON
 	-I$(COMPONENT_PATH)/../tools				\
 	-I$(COMPONENT_PATH)/../codecs/inc/opus 		\
 	-I$(COMPONENT_PATH)/../codecs/inc/opusfile	\
-	-I$(COMPONENT_PATH)/../driver_bt			\
 	-I$(COMPONENT_PATH)/../raop					\
 	-I$(COMPONENT_PATH)/../services				\
 	-I$(COMPONENT_PATH)/../audio/inc
@@ -23,4 +22,3 @@ CFLAGS += -O3 -DLINKALL -DLOOPBACK -DNO_FAAD -DRESAMPLE16 -DEMBEDDED -DTREMOR_ON
 COMPONENT_SRCDIRS := . tas57xx ac101 external wm8978
 COMPONENT_ADD_INCLUDEDIRS := . ./tas57xx ./ac101
 COMPONENT_EMBED_FILES := vu.data
-

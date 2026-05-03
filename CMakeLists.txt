@@ -108,28 +108,6 @@ add_custom_target(_jtag_scripts  ALL
 					COMMAND ${CMAKE_COMMAND} -P "${CMAKE_CURRENT_SOURCE_DIR}/generate_debug_scripts.cmake"
 )
 
-if(CMAKE_HOST_UNIX AND CONFIG_CSPOT_SINK)
-  # Add custom target to set executable permissions before build for cspot component
-    add_custom_target(set_cspot_permissions
-        COMMAND ${CMAKE_COMMAND} -E echo "************************************************************************************************"
-        COMMAND ${CMAKE_COMMAND} -E echo "**** Setting permissions for required files"
-        COMMAND ${CMAKE_COMMAND} -E echo "**** ${CMAKE_SOURCE_DIR}/components/spotify/cspot/bell/external/nanopb/generator/protoc-gen-nanopb"
-        COMMAND ${CMAKE_COMMAND} -E echo "**** ${CMAKE_SOURCE_DIR}/components/spotify/cspot/bell/external/nanopb/generator/*.py"
-        COMMAND ${CMAKE_COMMAND} -E echo "**** ${CMAKE_SOURCE_DIR}/components/spotify/cspot/bell/external/nanopb/generator/*.py2"
-        COMMAND ${CMAKE_COMMAND} -E echo "**** ${CMAKE_SOURCE_DIR}/components/spotify/cspot/bell/external/nanopb/generator/proto/*.py"
-        COMMAND ${CMAKE_COMMAND} -E echo "**** ${CMAKE_SOURCE_DIR}/components/spotify/cspot/bell/external/nanopb/generator/protoc"
-        COMMAND chmod +x ${CMAKE_SOURCE_DIR}/components/spotify/cspot/bell/external/nanopb/generator/protoc-gen-nanopb
-        COMMAND chmod +x ${CMAKE_SOURCE_DIR}/components/spotify/cspot/bell/external/nanopb/generator/*.py
-        COMMAND chmod +x ${CMAKE_SOURCE_DIR}/components/spotify/cspot/bell/external/nanopb/generator/*.py2
-        COMMAND chmod +x ${CMAKE_SOURCE_DIR}/components/spotify/cspot/bell/external/nanopb/generator/proto/*.py
-        COMMAND chmod +x ${CMAKE_SOURCE_DIR}/components/spotify/cspot/bell/external/nanopb/generator/protoc
-        COMMAND ${CMAKE_COMMAND} -E echo "************************************************************************************************"    
-    )
-
-  # Add a dependency to ensure permissions are set before building cspot component
-  add_dependencies(__idf_spotify set_cspot_permissions)
-endif()
-
 # ======================= DEBUG FLAGS ============================
 
 #target_compile_definitions(__idf_esp_eth PRIVATE -DLOG_LOCAL_LEVEL=ESP_LOG_INFO)
