@@ -105,7 +105,7 @@ menu "Squeezelite-ESP32"
 			default "model=TAS57xx,bck=33,ws=25,do=32,sda=27,scl=26,mute=14:0" if SQUEEZEAMP
 			default "model=I2S,bck=26,ws=25,do=33,i2c=53,sda=21,scl=22" if TWATCH2020
 			default "model=I2S,bck=5,ws=25,do=26,di=35,i2c=16,sda=18,scl=23,mck" if MUSE
-			default "model=ES8388,bck=5,ws=25,do=26,sda=18,scl=23,i2c=16"
+			default ""
 		config SPDIF_CONFIG
 			string
 			default "bck=33,ws=25,do=15" if SQUEEZEAMP
