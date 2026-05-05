@@ -477,6 +477,11 @@ static bool handle_rtsp(raop_ctx_t *ctx, int sock)
 	} else if (!strcmp(method, "ANNOUNCE")) {
 		char *padded, *p;
 
+		if (ctx->rtp || ctx->active_remote.running) {
+			LOG_INFO("[%p]: replacing active AirPlay session", ctx);
+			cleanup_rtsp(ctx, false);
+		}
+
 		NFREE(ctx->rtsp.aeskey);
 		NFREE(ctx->rtsp.aesiv);
 		NFREE(ctx->rtsp.fmtp);
@@ -534,6 +539,12 @@ static bool handle_rtsp(raop_ctx_t *ctx, int sock)
 		short unsigned tport = 0, cport = 0;
 		uint8_t *buffer = NULL;
 		size_t size = 0;
+
+		if (ctx->rtp) {
+			LOG_INFO("[%p]: replacing existing RTP session before SETUP", ctx);
+			rtp_end(ctx->rtp);
+			ctx->rtp = NULL;
+		}
 
 		// we are about to stream, do something if needed and optionally give buffers to play with
 		success = ctx->cmd_cb(RAOP_SETUP, &buffer, &size);
@@ -972,4 +983,3 @@ static void on_dmap_string(void *ctx, const char *code, const char *name, const 
 	else if (!strcasecmp(code, "asal")) metadata->album = strndup(buf, len);
 	else if (!strcasecmp(code, "minm")) metadata->title = strndup(buf, len);
 }
-

@@ -233,7 +233,7 @@ bool network_is_interface_connected(esp_netif_t * interface);
  *  Value: WIFI_PS_MODEM for power save (wifi modem sleep periodically)
  *  Note: Power save is only effective when in STA only mode
  */
-#define DEFAULT_STA_POWER_SAVE 				WIFI_PS_MIN_MODEM
+#define DEFAULT_STA_POWER_SAVE 				WIFI_PS_NONE
 
 
 void network_reboot_ota(char * url);
@@ -360,5 +360,4 @@ char* network_manager_alloc_get_mac_string(uint8_t mac[6]);
 #ifdef __cplusplus
 }
 #endif
-
 
